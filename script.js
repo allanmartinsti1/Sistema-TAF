@@ -1,4 +1,30 @@
 // ============================================================
+// CONEXÃO FIREBASE (ADICIONADO NO TOPO DO ARQUIVO)
+// ============================================================
+import { initializeApp } from "https://gstatic.com";
+import { getDatabase, ref, set } from "https://gstatic.com";
+
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_AUTHDOMAIN",
+  databaseURL: "SUA_DATABASE_URL", 
+  projectId: "SEU_PROJECT_ID",
+  storageBucket: "SEU_STORAGE_BUCKET",
+  messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+  appId: "SEU_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Compartilha com o escopo global para o seu código antigo ler
+window.db = db;
+window.ref = ref;
+window.set = set;
+// ============================================================
+
+
+// ============================================================
 // SISTEMA TAF
 // 2º Tenente Martins
 // ============================================================
@@ -542,11 +568,7 @@ const militares = [
 
 
 // ============================================================
-// 2. REFERÊNCIAS DOS ELEMENTOS HTML
-// ============================================================
-
-const nomeGuerra = document.getElementById("nomeGuerra");
-const buscar = document.getElementById("buscar");
+// 2getElementById("buscar");
 const dadosMilitar = document.getElementById("dadosMilitar");
 
 const dataAvaliacao = document.getElementById("dataAvaliacao");
@@ -562,7 +584,6 @@ const barra = document.getElementById("barra");
 
 const calcular = document.getElementById("calcular");
 const resultadoFinal = document.getElementById("resultadoFinal");
-const salvarTAF = document.getElementById("salvarTAF");
 
 
 // ============================================================
@@ -713,7 +734,11 @@ const TABELAS = {
             "22-25": [2150, 2250, 2450, 2650],
             "26-29": [2100, 2200, 2400, 2600],
             "30-33": [2050, 2150, 2350, 2550],
-            "34-37": [2000, 2100, 2300, 2500],
+            "34-37": [2000, 2100, 230. REFERÊNCIAS DOS ELEMENTOS HTML
+// ============================================================
+
+const nomeGuerra = document.getElementById("nomeGuerra");
+const buscar = document.0, 2500],
             "38-41": [1900, 2000, 2250, 2450],
             "42-45": [1850, 1950, 2200, 2400],
             "46-49": [1750, 1850, 2050, 2250]
@@ -1332,6 +1357,8 @@ calcular.addEventListener("click", function () {
 
     resultadoFinal.innerHTML = `
 
+    salvarAvaliacaoNoFirebase(resultadoFinal.innerText);
+
         <div class="resumo-militar">
 
             <h3>
@@ -1588,3 +1615,35 @@ salvarTAF.addEventListener("click", function () {
     );
 
 });
+
+// ============================================================
+// FUNÇÃO COMPLEMENTAR PARA SALVAR NO BANCO DE DADOS
+// ============================================================
+function salvarAvaliacaoNoFirebase(textoResultado) {
+    // Verifica se o Firebase foi carregado e se há um militar selecionado
+    if (!window.set || !militarSelecionado) return;
+
+    // Cria uma identificação para a pasta usando o nome do militar e a data
+    const nomeChave = normalizar(militarSelecionado.nomeCompleto);
+    const dataChave = document.getElementById("dataAvaliacao").value;
+
+    window.set(window.ref(window.db, 'avaliacoes/' + nomeChave + '_' + dataChave), {
+        nomeCompleto: militarSelecionado.nomeCompleto,
+        nomeGuerra: militarSelecionado.nomeGuerra,
+        posto: militarSelecionado.posto,
+        om: militarSelecionado.om,
+        idade: document.getElementById("idadeCalculada").value,
+        sexo: document.getElementById("sexo").value,
+        linha: document.getElementById("linha").value,
+        indices: {
+            corrida: document.getElementById("corrida").value || 0,
+            flexao: document.getElementById("flexao").value || 0,
+            abdominal: document.getElementById("abdominal").value || 0,
+            barra: document.getElementById("barra").value || 0
+        },
+        resultadoTAF: textoResultado,
+        dataRegistro: new Date().toLocaleString('pt-BR')
+    })
+    .then(() => console.log("TAF armazenado com sucesso no Firebase!"))
+    .catch((erro) => console.error("Erro ao salvar no Firebase:", erro));
+}
