@@ -1588,3 +1588,31 @@ salvarTAF.addEventListener("click", function () {
     );
 
 });
+// 1. IMPORTAÇÕES (Sempre no início do arquivo .js)
+import { initializeApp } from "https://gstatic.com";
+import { getDatabase, ref, set } from "https://gstatic.com";
+
+// 2. CONFIGURAÇÃO (Com as suas chaves do Firebase)
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_AUTHDOMAIN",
+  databaseURL: "SUA_DATABASE_URL",
+  projectId: "SEU_PROJECT_ID",
+  storageBucket: "SEU_STORAGE_BUCKET",
+  messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+  appId: "SEU_APP_ID"
+};
+
+// 3. INICIALIZAÇÃO
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// 4. TESTE AUTOMÁTICO DE ENVIO
+set(ref(db, 'usuarios/teste'), {
+  nome: "Allan",
+  status: "Movi para o script.js com sucesso!"
+})
+.then(() => console.log("Gravado pelo script.js!"))
+.catch((error) => console.error("Erro:", error));
+
+// --- ABAIXO DAQUI VOCÊ PODE CONTINUAR COM O SEU CÓDIGO NORMAL ---

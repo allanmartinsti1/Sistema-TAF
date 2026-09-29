@@ -247,7 +247,7 @@
 
 
     <!-- JavaScript -->
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 
 </body>
 </html>
@@ -260,36 +260,3 @@
     </p>
 
 </div>
-
-<button
-    type="button"
-    id="salvarTAF"
-    class="botao-salvar"
->
-    Salvar TAF
-</button>
-
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyDWjjXAPoqOqtiADMNfI4TjacyCgwtjYP8",
-    authDomain: "database-taf.firebaseapp.com",
-    databaseURL: "https://database-taf-default-rtdb.firebaseio.com",
-    projectId: "database-taf",
-    storageBucket: "database-taf.firebasestorage.app",
-    messagingSenderId: "948075818125",
-    appId: "1:948075818125:web:41d256d0b4dff326a046c4",
-    measurementId: "G-B0NH0TKRXW"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
