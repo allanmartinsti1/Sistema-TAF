@@ -218,6 +218,14 @@
                 Calcular TAF
             </button>
 
+            <button
+                type="button"
+                id="salvarTAF"
+                class="botao-salvar"
+            >
+                Salvar TAF
+            </button>
+
         </section>
 
 
@@ -241,22 +249,31 @@
 
             </div>
 
-                    <button
-                type="button"
-                id="salvarTAF"
-                class="botao-salvar"
-            >
-                Salvar TAF
-            </button>
-
-</section>
+        </section>
 
     </main>
 
+    <section class="card historico-card" id="historicoSection">
+        <div class="historico-cabecalho">
+            <div>
+                <h2>5. Histórico de TAF</h2>
+                <p>Consulte os TAFs salvos neste navegador.</p>
+            </div>
+            <button type="button" id="atualizarHistorico" class="botao-secundario">Atualizar</button>
+        </div>
+
+        <div class="historico-filtros">
+            <input type="search" id="filtroHistorico" placeholder="Pesquisar por nome ou nome de guerra">
+            <button type="button" id="limparFiltro" class="botao-secundario">Limpar</button>
+        </div>
+
+        <div id="historicoResumo" class="historico-resumo"></div>
+        <div id="listaHistorico" class="lista-historico"></div>
+    </section>
+
 
     <!-- JavaScript -->
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 
 </body>
 </html>
-

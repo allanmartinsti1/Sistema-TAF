@@ -1,15 +1,35 @@
 // ============================================================
-// CONEXÃO FIREBASE (OPCIONAL)
+// FIREBASE - BANCO DE DADOS CENTRAL
 // ============================================================
-// O sistema funciona normalmente com localStorage.
-// Firebase só será usado quando um SDK/configuração real for adicionado.
-// ============================================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import {
+    getDatabase,
+    ref,
+    set,
+    push,
+    onValue,
+    remove
+} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
+import { firebaseConfig } from "./firebase-config.js";
 
-window.db = null;
-window.ref = null;
-window.set = null;
+let db = null;
+let firebaseAtivo = false;
 
-// ============================================================
+try {
+    if (firebaseConfig?.apiKey && !firebaseConfig.apiKey.startsWith("COLOQUE_")) {
+        const app = initializeApp(firebaseConfig);
+        db = getDatabase(app);
+        firebaseAtivo = true;
+        window.db = db;
+        window.ref = ref;
+        window.set = set;
+        console.log("Firebase conectado. Banco de dados central ativo.");
+    } else {
+        console.warn("Firebase ainda não configurado. O sistema usará o modo local.");
+    }
+} catch (erro) {
+    console.error("Falha ao iniciar Firebase:", erro);
+}
 
 // ============================================================
 // SISTEMA TAF
@@ -555,7 +575,8 @@ const militares = [
 
 
 // ============================================================
-// 2. REFERÊNCIAS DOS ELEMENTOS
+// 2. ELEMENTOS DA INTERFACE
+// ============================================================
 const buscar = document.getElementById("buscar");
 const dadosMilitar = document.getElementById("dadosMilitar");
 
@@ -573,6 +594,8 @@ const barra = document.getElementById("barra");
 const calcular = document.getElementById("calcular");
 const resultadoFinal = document.getElementById("resultadoFinal");
 const salvarTAF = document.getElementById("salvarTAF");
+
+let ultimoResultadoTAF = null;
 
 
 // ============================================================
@@ -1339,6 +1362,13 @@ calcular.addEventListener("click", function () {
     // Mostrar resultado
     // --------------------------------------------------------
 
+    ultimoResultadoTAF = {
+        corrida: conceitoCorrida,
+        flexao: conceitoFlexao,
+        abdominal: conceitoAbdominal,
+        barra: conceitoBarra
+    };
+
     resultadoFinal.innerHTML = `
 
         <div class="resumo-militar">
@@ -1451,7 +1481,6 @@ calcular.addEventListener("click", function () {
 
     `;
 
-    salvarAvaliacaoNoFirebase(resultadoFinal.innerText);
 
 });
 
@@ -1469,21 +1498,78 @@ console.log(
 );
 
 // ============================================================
+// FIREBASE - FUNÇÕES DO BANCO CENTRAL
+// ============================================================
+
+async function sincronizarMilitaresComBanco() {
+    if (!firebaseAtivo || !db) return;
+
+    const tarefas = militares.map((militar, indice) => {
+        const militarBanco = {
+            id: indice + 1,
+            nomeCompleto: militar.nomeCompleto,
+            nomeGuerra: militar.nomeGuerra,
+            nascimento: militar.nascimento,
+            posto: militar.posto,
+            om: militar.om
+        };
+        return set(ref(db, `militares/${indice + 1}`), militarBanco);
+    });
+
+    await Promise.all(tarefas);
+    console.log(`${militares.length} militares sincronizados com o Firebase.`);
+}
+
+async function salvarAvaliacaoNoFirebase() {
+    if (!firebaseAtivo || !db) return null;
+    if (!militarSelecionado || !ultimoResultadoTAF) return null;
+
+    const registro = {
+        militar: {
+            nomeCompleto: militarSelecionado.nomeCompleto,
+            nomeGuerra: militarSelecionado.nomeGuerra,
+            posto: militarSelecionado.posto,
+            om: militarSelecionado.om,
+            nascimento: militarSelecionado.nascimento
+        },
+        avaliacao: {
+            data: dataAvaliacao.value,
+            idade: idadeNaData(militarSelecionado.nascimento, dataAvaliacao.value),
+            sexo: sexo.value,
+            linha: linha.value
+        },
+        resultados: {
+            corrida: Number(corrida.value),
+            flexao: Number(flexao.value),
+            abdominal: Number(abdominal.value),
+            barra: Number(barra.value)
+        },
+        conceitos: { ...ultimoResultadoTAF },
+        dataRegistro: new Date().toISOString()
+    };
+
+    const novaAvaliacao = push(ref(db, "avaliacoes"));
+    await set(novaAvaliacao, registro);
+    console.log("Avaliação gravada no Firebase:", novaAvaliacao.key);
+    return novaAvaliacao.key;
+}
+
+// ============================================================
 // SALVAR TAF
 // ============================================================
 
-salvarTAF.addEventListener("click", function () {
+salvarTAF.addEventListener("click", async function () {
 
-    // Verifica se existe militar selecionado
     if (!militarSelecionado) {
-
         alert("Primeiro selecione um militar.");
-
         return;
     }
 
+    if (!ultimoResultadoTAF) {
+        alert("Primeiro clique em 'Calcular TAF'.");
+        return;
+    }
 
-    // Verifica se os campos foram preenchidos
     if (
         !dataAvaliacao.value ||
         !sexo.value ||
@@ -1493,151 +1579,223 @@ salvarTAF.addEventListener("click", function () {
         abdominal.value === "" ||
         barra.value === ""
     ) {
-
-        alert(
-            "Preencha todos os dados da avaliação antes de salvar."
-        );
-
+        alert("Preencha todos os dados da avaliação antes de salvar.");
         return;
     }
 
-
-    // Calcula a idade
     const idade = idadeNaData(
         militarSelecionado.nascimento,
         dataAvaliacao.value
     );
 
-
-    // Monta o registro
     const registro = {
-
         id: Date.now(),
-
         dataSalvamento: new Date().toISOString(),
-
         militar: {
-
-            nomeCompleto:
-                militarSelecionado.nomeCompleto,
-
-            nomeGuerra:
-                militarSelecionado.nomeGuerra,
-
-            posto:
-                militarSelecionado.posto,
-
-            om:
-                militarSelecionado.om,
-
-            nascimento:
-                militarSelecionado.nascimento
-
-        },
-
-        avaliacao: {
-
-            data:
-                dataAvaliacao.value,
-
-            idade:
-                idade,
-
-            sexo:
-                sexo.value,
-
-            linha:
-                linha.value
-
-        },
-
-        resultados: {
-
-            corrida:
-                Number(corrida.value),
-
-            flexao:
-                Number(flexao.value),
-
-            abdominal:
-                Number(abdominal.value),
-
-            barra:
-                Number(barra.value)
-
-        }
-
-    };
-
-
-    // Recupera histórico existente
-    const historico =
-        JSON.parse(
-            localStorage.getItem("historicoTAF")
-        ) || [];
-
-
-    // Adiciona o novo TAF
-    historico.push(registro);
-
-
-    // Salva novamente no navegador
-    localStorage.setItem(
-        "historicoTAF",
-        JSON.stringify(historico)
-    );
-
-
-    alert(
-        "TAF salvo com sucesso!"
-    );
-
-
-    console.log(
-        "TAF salvo:",
-        registro
-    );
-
-});
-
-// ============================================================
-// FUNÇÃO COMPLEMENTAR PARA SALVAR NO FIREBASE (OPCIONAL)
-// ============================================================
-function salvarAvaliacaoNoFirebase(textoResultado) {
-
-    if (!window.set || !window.db || !militarSelecionado) {
-        return;
-    }
-
-    const nomeChave = normalizar(militarSelecionado.nomeCompleto);
-    const dataChave = dataAvaliacao.value;
-
-    window.set(
-        window.ref(
-            window.db,
-            "avaliacoes/" + nomeChave + "_" + dataChave
-        ),
-        {
             nomeCompleto: militarSelecionado.nomeCompleto,
             nomeGuerra: militarSelecionado.nomeGuerra,
             posto: militarSelecionado.posto,
             om: militarSelecionado.om,
-            idade: idadeNaData(
-                militarSelecionado.nascimento,
-                dataAvaliacao.value
-            ),
+            nascimento: militarSelecionado.nascimento
+        },
+        avaliacao: {
+            data: dataAvaliacao.value,
+            idade,
             sexo: sexo.value,
-            linha: linha.value,
-            indices: {
-                corrida: corrida.value || 0,
-                flexao: flexao.value || 0,
-                abdominal: abdominal.value || 0,
-                barra: barra.value || 0
-            },
-            resultadoTAF: textoResultado,
-            dataRegistro: new Date().toLocaleString("pt-BR")
+            linha: linha.value
+        },
+        resultados: {
+            corrida: Number(corrida.value),
+            flexao: Number(flexao.value),
+            abdominal: Number(abdominal.value),
+            barra: Number(barra.value)
+        },
+        conceitos: { ...ultimoResultadoTAF }
+    };
+
+    // Mantém cópia local para funcionamento offline.
+    const historico = JSON.parse(localStorage.getItem("historicoTAF")) || [];
+    historico.push(registro);
+    localStorage.setItem("historicoTAF", JSON.stringify(historico));
+
+    try {
+        if (firebaseAtivo) {
+            await salvarAvaliacaoNoFirebase();
+            alert("TAF salvo no banco de dados com sucesso!");
+            carregarHistoricoFirebase();
+        } else {
+            alert("TAF salvo localmente. Configure o Firebase para salvar no banco central.");
         }
-    )
-    .then(() => console.log("TAF armazenado com sucesso no Firebase!"))
-    .catch((erro) => console.error("Erro ao salvar no Firebase:", erro));
+    } catch (erro) {
+        console.error("Erro ao salvar no Firebase:", erro);
+        alert("Não foi possível salvar no banco. O TAF ficou salvo localmente neste navegador.");
+    }
+
+    renderizarHistorico();
+});
+
+
+// ============================================================
+// 20. HISTÓRICO DE TAF
+// ============================================================
+
+const filtroHistorico = document.getElementById("filtroHistorico");
+const limparFiltro = document.getElementById("limparFiltro");
+const atualizarHistorico = document.getElementById("atualizarHistorico");
+const listaHistorico = document.getElementById("listaHistorico");
+const historicoResumo = document.getElementById("historicoResumo");
+
+function obterHistorico() {
+    try {
+        return JSON.parse(localStorage.getItem("historicoTAF")) || [];
+    } catch (erro) {
+        console.error("Erro ao ler histórico:", erro);
+        return [];
+    }
 }
+
+function escaparHTML(texto) {
+    return String(texto ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function conceitoRegistro(registro, campo) {
+    return registro.conceitos?.[campo] || "—";
+}
+
+function renderizarHistoricoLista(historico) {
+    const termo = normalizar(filtroHistorico?.value || "");
+
+    historico.sort((a, b) => {
+        const da = new Date(a.avaliacao?.data || a.dataSalvamento || a.dataRegistro || 0).getTime();
+        const db = new Date(b.avaliacao?.data || b.dataSalvamento || b.dataRegistro || 0).getTime();
+        return db - da;
+    });
+
+    const filtrados = historico.filter(registro => {
+        const nome = normalizar(registro.militar?.nomeCompleto || registro.nomeCompleto || "");
+        const guerra = normalizar(registro.militar?.nomeGuerra || registro.nomeGuerra || "");
+        return !termo || nome.includes(termo) || guerra.includes(termo);
+    });
+
+    historicoResumo.textContent = `${filtrados.length} avaliação(ões) encontrada(s)`;
+
+    if (!filtrados.length) {
+        listaHistorico.innerHTML = `
+            <div class="historico-vazio">
+                <strong>Nenhum TAF encontrado.</strong>
+                <span>Os registros aparecerão aqui quando forem salvos.</span>
+            </div>
+        `;
+        return;
+    }
+
+    listaHistorico.innerHTML = filtrados.map(registro => {
+        const militar = registro.militar || registro;
+        const avaliacao = registro.avaliacao || {};
+        const resultados = registro.resultados || {};
+        const data = avaliacao.data ? formatarData(avaliacao.data) : "—";
+
+        return `
+            <article class="historico-item">
+                <div class="historico-item-topo">
+                    <div>
+                        <h3>${escaparHTML(militar.nomeCompleto || "Militar")}</h3>
+                        <p>${escaparHTML(militar.nomeGuerra || "")} · ${escaparHTML(militar.posto || "")}</p>
+                    </div>
+                    <span class="historico-data">${escaparHTML(data)}</span>
+                </div>
+                <div class="historico-detalhes">
+                    <div><small>Corrida</small><strong>${escaparHTML(resultados.corrida)} m</strong><b>${escaparHTML(conceitoRegistro(registro,"corrida"))}</b></div>
+                    <div><small>Flexão</small><strong>${escaparHTML(resultados.flexao)}</strong><b>${escaparHTML(conceitoRegistro(registro,"flexao"))}</b></div>
+                    <div><small>Abdominal</small><strong>${escaparHTML(resultados.abdominal)}</strong><b>${escaparHTML(conceitoRegistro(registro,"abdominal"))}</b></div>
+                    <div><small>Barra</small><strong>${escaparHTML(resultados.barra)}</strong><b>${escaparHTML(conceitoRegistro(registro,"barra"))}</b></div>
+                </div>
+                <div class="historico-meta">
+                    <span>${escaparHTML(avaliacao.idade)} anos</span>
+                    <span>${escaparHTML(avaliacao.sexo || "")}</span>
+                    <span>${escaparHTML(avaliacao.linha || "")}</span>
+                    ${registro._firebaseId ? `<button type="button" class="botao-excluir" data-firebase-id="${escaparHTML(registro._firebaseId)}">Excluir</button>` : `<button type="button" class="botao-excluir" data-id="${escaparHTML(registro.id)}">Excluir</button>`}
+                </div>
+            </article>
+        `;
+    }).join("");
+
+    listaHistorico.querySelectorAll(".botao-excluir").forEach(botao => {
+        botao.addEventListener("click", async () => {
+            if (!confirm("Excluir este TAF do histórico?")) return;
+
+            if (botao.dataset.firebaseId && firebaseAtivo) {
+                try {
+                    await remove(ref(db, `avaliacoes/${botao.dataset.firebaseId}`));
+                    alert("TAF excluído do banco de dados.");
+                    carregarHistoricoFirebase();
+                } catch (erro) {
+                    console.error(erro);
+                    alert("Não foi possível excluir o TAF do banco.");
+                }
+            } else {
+                const id = Number(botao.dataset.id);
+                const atualizado = obterHistorico().filter(item => Number(item.id) !== id);
+                localStorage.setItem("historicoTAF", JSON.stringify(atualizado));
+                renderizarHistoricoLista(atualizado);
+            }
+        });
+    });
+}
+
+function renderizarHistorico() {
+    renderizarHistoricoLista(obterHistorico());
+}
+
+function carregarHistoricoFirebase() {
+    if (!firebaseAtivo || !db) {
+        renderizarHistorico();
+        return;
+    }
+
+    onValue(ref(db, "avaliacoes"), (snapshot) => {
+        const dados = snapshot.val() || {};
+        const historico = Object.entries(dados).map(([id, registro]) => ({
+            ...registro,
+            _firebaseId: id
+        }));
+
+        // Mantém o cache local alinhado ao banco para consulta offline.
+        localStorage.setItem("historicoTAF", JSON.stringify(historico));
+        renderizarHistoricoLista(historico);
+    }, (erro) => {
+        console.error("Erro ao carregar histórico do Firebase:", erro);
+        renderizarHistorico();
+    });
+}
+
+if (filtroHistorico) filtroHistorico.addEventListener("input", renderizarHistorico);
+if (limparFiltro) limparFiltro.addEventListener("click", () => {
+    filtroHistorico.value = "";
+    renderizarHistorico();
+});
+if (atualizarHistorico) atualizarHistorico.addEventListener("click", () => {
+    if (firebaseAtivo) carregarHistoricoFirebase();
+    else renderizarHistorico();
+});
+
+// Inicialização do banco e do histórico.
+(async function iniciarBanco() {
+    if (firebaseAtivo) {
+        try {
+            await sincronizarMilitaresComBanco();
+            carregarHistoricoFirebase();
+        } catch (erro) {
+            console.error("Erro ao sincronizar banco:", erro);
+            renderizarHistorico();
+        }
+    } else {
+        renderizarHistorico();
+    }
+})();
+

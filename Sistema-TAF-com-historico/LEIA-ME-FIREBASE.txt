@@ -1,0 +1,71 @@
+SISTEMA TAF - BANCO DE DADOS FIREBASE
+
+O sistema foi preparado para usar o Firebase Realtime Database como banco central.
+
+PASSO 1
+Crie um projeto no Firebase Console.
+
+PASSO 2
+No projeto, entre em Realtime Database e crie o banco.
+
+PASSO 3
+Crie um aplicativo Web (ícone </>).
+
+PASSO 4
+Copie o objeto firebaseConfig fornecido pelo Firebase e cole em:
+
+firebase-config.js
+
+Substitua os valores COLOQUE_AQUI.
+
+PASSO 5
+No Realtime Database, durante a implantação/teste, você pode usar estas regras temporárias:
+
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
+
+ATENÇÃO: essas regras deixam o banco público para leitura e escrita. NÃO use assim em produção.
+Depois devemos colocar Firebase Authentication e regras por usuário.
+
+ESTRUTURA DO BANCO
+
+militares/
+  <id>
+    nomeCompleto
+    nomeGuerra
+    nascimento
+    posto
+    om
+
+avaliacoes/
+  <id>
+    militarId
+    nomeCompleto
+    nomeGuerra
+    posto
+    om
+    nascimento
+    data
+    idade
+    sexo
+    linha
+    resultados/
+      corrida
+      flexao
+      abdominal
+      barra
+    conceitos/
+      corrida
+      flexao
+      abdominal
+      barra
+    resultadoFinal
+    dataRegistro
+
+IMPORTANTE
+A configuração do Firebase não é gerada automaticamente porque as credenciais do seu projeto não foram fornecidas.
+O pacote funciona em modo local até você preencher firebase-config.js.
