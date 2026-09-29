@@ -1,28 +1,15 @@
 // ============================================================
-// CONEXÃO FIREBASE (ADICIONADO NO TOPO DO ARQUIVO)
+// CONEXÃO FIREBASE (OPCIONAL)
 // ============================================================
-import { initializeApp } from "https://gstatic.com";
-import { getDatabase, ref, set } from "https://gstatic.com";
-
-const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_AUTHDOMAIN",
-  databaseURL: "SUA_DATABASE_URL", 
-  projectId: "SEU_PROJECT_ID",
-  storageBucket: "SEU_STORAGE_BUCKET",
-  messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-  appId: "SEU_APP_ID"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// Compartilha com o escopo global para o seu código antigo ler
-window.db = db;
-window.ref = ref;
-window.set = set;
+// O sistema funciona normalmente com localStorage.
+// Firebase só será usado quando um SDK/configuração real for adicionado.
 // ============================================================
 
+window.db = null;
+window.ref = null;
+window.set = null;
+
+// ============================================================
 
 // ============================================================
 // SISTEMA TAF
@@ -568,7 +555,8 @@ const militares = [
 
 
 // ============================================================
-// 2getElementById("buscar");
+// 2. REFERÊNCIAS DOS ELEMENTOS
+const buscar = document.getElementById("buscar");
 const dadosMilitar = document.getElementById("dadosMilitar");
 
 const dataAvaliacao = document.getElementById("dataAvaliacao");
@@ -584,6 +572,7 @@ const barra = document.getElementById("barra");
 
 const calcular = document.getElementById("calcular");
 const resultadoFinal = document.getElementById("resultadoFinal");
+const salvarTAF = document.getElementById("salvarTAF");
 
 
 // ============================================================
@@ -1352,8 +1341,6 @@ calcular.addEventListener("click", function () {
 
     resultadoFinal.innerHTML = `
 
-    salvarAvaliacaoNoFirebase(resultadoFinal.innerText);
-
         <div class="resumo-militar">
 
             <h3>
@@ -1463,6 +1450,8 @@ calcular.addEventListener("click", function () {
         </div>
 
     `;
+
+    salvarAvaliacaoNoFirebase(resultadoFinal.innerText);
 
 });
 
@@ -1612,33 +1601,43 @@ salvarTAF.addEventListener("click", function () {
 });
 
 // ============================================================
-// FUNÇÃO COMPLEMENTAR PARA SALVAR NO BANCO DE DADOS
+// FUNÇÃO COMPLEMENTAR PARA SALVAR NO FIREBASE (OPCIONAL)
 // ============================================================
 function salvarAvaliacaoNoFirebase(textoResultado) {
-    // Verifica se o Firebase foi carregado e se há um militar selecionado
-    if (!window.set || !militarSelecionado) return;
 
-    // Cria uma identificação para a pasta usando o nome do militar e a data
+    if (!window.set || !window.db || !militarSelecionado) {
+        return;
+    }
+
     const nomeChave = normalizar(militarSelecionado.nomeCompleto);
-    const dataChave = document.getElementById("dataAvaliacao").value;
+    const dataChave = dataAvaliacao.value;
 
-    window.set(window.ref(window.db, 'avaliacoes/' + nomeChave + '_' + dataChave), {
-        nomeCompleto: militarSelecionado.nomeCompleto,
-        nomeGuerra: militarSelecionado.nomeGuerra,
-        posto: militarSelecionado.posto,
-        om: militarSelecionado.om,
-        idade: document.getElementById("idadeCalculada").value,
-        sexo: document.getElementById("sexo").value,
-        linha: document.getElementById("linha").value,
-        indices: {
-            corrida: document.getElementById("corrida").value || 0,
-            flexao: document.getElementById("flexao").value || 0,
-            abdominal: document.getElementById("abdominal").value || 0,
-            barra: document.getElementById("barra").value || 0
-        },
-        resultadoTAF: textoResultado,
-        dataRegistro: new Date().toLocaleString('pt-BR')
-    })
+    window.set(
+        window.ref(
+            window.db,
+            "avaliacoes/" + nomeChave + "_" + dataChave
+        ),
+        {
+            nomeCompleto: militarSelecionado.nomeCompleto,
+            nomeGuerra: militarSelecionado.nomeGuerra,
+            posto: militarSelecionado.posto,
+            om: militarSelecionado.om,
+            idade: idadeNaData(
+                militarSelecionado.nascimento,
+                dataAvaliacao.value
+            ),
+            sexo: sexo.value,
+            linha: linha.value,
+            indices: {
+                corrida: corrida.value || 0,
+                flexao: flexao.value || 0,
+                abdominal: abdominal.value || 0,
+                barra: barra.value || 0
+            },
+            resultadoTAF: textoResultado,
+            dataRegistro: new Date().toLocaleString("pt-BR")
+        }
+    )
     .then(() => console.log("TAF armazenado com sucesso no Firebase!"))
     .catch((erro) => console.error("Erro ao salvar no Firebase:", erro));
 }
