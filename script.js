@@ -832,7 +832,7 @@ function avaliar(evento, valor, tabela, idade) {
     if (!tabelaEvento) return "NÃO REALIZA";
 
     const faixa = encontrarFaixa(tabelaEvento, idade);
-    if (!faixa) return "FORA DA FAIXA";
+    if (!faixa) return "SUFICIÊNCIA";
 
     const regra = tabelaEvento[faixa];
     if (!regra) return "NÃO REALIZA";
