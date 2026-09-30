@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sistema TAF - 2º Tenente Martins</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <header class="cabecalho">
+            <h1>Sistema TAF</h1>
+            <p>Treinamento de Aptidão Física</p>
+            <p class="autor">Desenvolvido por 2º Tenente Martins</p>
+        </header>
+
+
+        <!-- ========================= -->
+        <!-- BUSCA DO MILITAR -->
+        <!-- ========================= -->
+
+        <section class="card">
+
+            <h2>1. Identificação do Militar</h2>
+
+            <label for="nomeGuerra">
+                Nome de guerra:
+            </label>
+
+            <div class="linha-busca">
+
+                <input
+                    type="text"
+                    id="nomeGuerra"
+                    placeholder="Digite o nome de guerra"
+                    autocomplete="off"
+                >
+
+                <button
+                    type="button"
+                    id="buscar"
+                >
+                    Buscar
+                </button>
+
+            </div>
+
+            <div id="dadosMilitar"></div>
+
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- DADOS DA AVALIAÇÃO -->
+        <!-- ========================= -->
+
+        <section class="card" id="avaliacao">
+
+            <h2>2. Dados da Avaliação</h2>
+
+            <div class="grid">
+
+                <div>
+                    <label for="dataAvaliacao">
+                        Data da avaliação:
+                    </label>
+
+                    <input
+                        type="date"
+                        id="dataAvaliacao"
+                    >
+                </div>
+
+
+                <div>
+                    <label for="sexo">
+                        Sexo:
+                    </label>
+
+                    <select id="sexo">
+
+                        <option value="">
+                            Selecione
+                        </option>
+
+                        <option value="M">
+                            Masculino
+                        </option>
+
+                        <option value="F">
+                            Feminino
+                        </option>
+
+                    </select>
+                </div>
+
+
+                <div>
+                    <label for="linha">
+                        Linha:
+                    </label>
+
+                    <select id="linha">
+
+                        <option value="">
+                            Selecione
+                        </option>
+
+                        <option value="belico">
+                            Linha de Ensino Militar Bélico
+                        </option>
+
+                        <option value="tecnologico">
+                            Saúde / Complementar / Científico-Tecnológico
+                        </option>
+
+                    </select>
+                </div>
+
+            </div>
+
+
+            <div
+                id="idadeCalculada"
+                class="idade"
+            ></div>
+
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- RESULTADOS DO TAF -->
+        <!-- ========================= -->
+
+        <section class="card">
+
+            <h2>3. Resultados do TAF</h2>
+
+
+            <div class="grid">
+
+                <div>
+
+                    <label for="corrida">
+                        Corrida – 12 minutos (metros):
+                    </label>
+
+                    <input
+                        type="number"
+                        id="corrida"
+                        min="0"
+                        placeholder="Ex.: 2800"
+                    >
+
+                </div>
+
+
+                <div>
+
+                    <label for="flexao">
+                        Flexão de braços:
+                    </label>
+
+                    <input
+                        type="number"
+                        id="flexao"
+                        min="0"
+                        placeholder="Ex.: 30"
+                    >
+
+                </div>
+
+
+                <div>
+
+                    <label for="abdominal">
+                        Abdominal supra:
+                    </label>
+
+                    <input
+                        type="number"
+                        id="abdominal"
+                        min="0"
+                        placeholder="Ex.: 40"
+                    >
+
+                </div>
+
+
+                <div>
+
+                    <label for="barra">
+                        Barra fixa / sustentação (quando aplicável):
+                    </label>
+
+                    <input
+                        type="number"
+                        id="barra"
+                        min="0"
+                        placeholder="Ex.: 8 ou 45 s"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                id="calcular"
+                class="botao-calcular"
+            >
+                Calcular TAF
+            </button>
+
+            <button
+                type="button"
+                id="salvarTAF"
+                class="botao-salvar"
+            >
+                Salvar TAF
+            </button>
+
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- RESULTADO -->
+        <!-- ========================= -->
+
+        <section
+            class="card"
+            id="resultados"
+        >
+
+            <h2>4. Resultado</h2>
+
+            <div id="resultadoFinal">
+
+                <p>
+                    Preencha os dados e clique em
+                    <strong>Calcular TAF</strong>.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <section class="card historico-card" id="historicoSection">
+        <div class="historico-cabecalho">
+            <div>
+                <h2>5. Histórico de TAF</h2>
+                <p>Consulte os TAFs salvos neste navegador.</p>
+            </div>
+            <button type="button" id="atualizarHistorico" class="botao-secundario">Atualizar</button>
+        </div>
+
+        <div class="historico-filtros">
+            <input type="search" id="filtroHistorico" placeholder="Pesquisar por nome ou nome de guerra">
+            <button type="button" id="limparFiltro" class="botao-secundario">Limpar</button>
+        </div>
+
+        <div id="historicoResumo" class="historico-resumo"></div>
+        <div id="listaHistorico" class="lista-historico"></div>
+    </section>
+
+
+    <!-- JavaScript -->
+    <script type="module" src="script.js"></script>
+
+</body>
+</html>
