@@ -1,0 +1,5 @@
+Versão com os índices do TAF revisados diretamente a partir do PDF Novos_Indices_TAF.pdf.
+
+Teste recomendado: Bianca, 33 anos, feminino, tecnológico, flexão 16 deve retornar E.
+
+O cálculo agora também reconhece faixas 50-65, Suficiência e NÃO REALIZA conforme o PDF.
